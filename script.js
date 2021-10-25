@@ -59,6 +59,43 @@ const movePaddle = () => {
 	}
 };
 
+// Bricks
+let bricks, rows, cols, brickWidth, brickHeight, padding;
+
+const initBricks = () => {
+	rows = 3;
+	cols = 5;
+	padding = 5;
+	brickWidth = width / cols - padding;
+	brickHeight = 20;
+
+	bricks = [];
+	for (let i = 0; i < rows; i++) {
+		bricks[i] = [];
+		for (let j = 0; j < cols; j++) {
+			bricks[i][j] = {
+				x: j * (brickWidth + padding) + padding,
+				y: i * (brickHeight + padding) + padding,
+				width: brickWidth,
+				height: brickHeight,
+                visible: true,
+                color: "black",
+			};
+		}
+	}
+	console.log(bricks);
+};
+
+const drawBricks = () => {
+	bricks.forEach((row) => {
+		row.forEach((brick) => {
+			if (brick.visible) {
+				rect(brick.x, brick.y, brick.width, brick.height, brick.color);
+			}
+		});
+	});
+};
+
 const circle = (x, y, radius, color) => {
 	ctx.beginPath();
 	ctx.arc(x, y, radius, 0, Math.PI * 2, false);
@@ -88,6 +125,9 @@ const draw = () => {
 
 	rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
 
+	// Draw bricks
+	drawBricks();
+
 	if (
 		ball.x + ball.radius + ball.dx > width ||
 		ball.x + ball.dx - ball.radius < 0
@@ -108,4 +148,5 @@ const draw = () => {
 	requestAnimationFrame(draw);
 };
 
+initBricks();
 draw();
