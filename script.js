@@ -9,17 +9,17 @@ let ball = {
 	y: height / 2,
 	radius: 10,
 	dx: 4,
-    dy: height * 0.01,
-    color: "black"
+	dy: height * 0.01,
+	color: "black",
 };
 
 let paddle = {
-    width: 125,
-    height: 20,
-    x: 0,
-    y: 0,
-    color: "black"
-}
+	width: 125,
+	height: 20,
+	x: 0,
+	y: 0,
+	color: "black",
+};
 
 paddle.x = (width - paddle.width) / 2;
 paddle.y = height - paddle.height;
@@ -46,8 +46,27 @@ const rect = (x, y, width, height, color) => {
 
 const draw = () => {
 	clear();
-    circle(ball.x, ball.y, ball.radius, ball.color);
-    rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
+	circle(ball.x, ball.y, ball.radius, ball.color);
+	rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
+
+	if (
+		ball.x + ball.radius + ball.dx > width ||
+		ball.x + ball.dx - ball.radius < 0
+	) {
+		ball.dx = -ball.dx;
+	}
+
+	if (
+		ball.y + ball.radius + ball.dy > height ||
+		ball.y + ball.dy - ball.radius < 0
+	) {
+		ball.dy = -ball.dy;
+	}
+
+	ball.x += ball.dx;
+    ball.y += ball.dy;
+
+	requestAnimationFrame(draw);
 };
 
 draw();
