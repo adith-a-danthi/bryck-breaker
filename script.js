@@ -8,7 +8,7 @@ let ball = {
 	x: width / 2,
 	y: height / 2,
 	radius: 10,
-	dx: 4, // horizontal speed of the ball
+	dx: 0, // horizontal speed of the ball
 	dy: height * 0.01, // vertical speed of the ball
 	color: "black",
 };
@@ -24,6 +24,10 @@ let paddle = {
 
 paddle.x = (width - paddle.width) / 2;
 paddle.y = height - paddle.height;
+
+let animationId;
+
+let gameInProgress = false;
 
 // Paddle Controls
 // Keyboard
@@ -60,7 +64,7 @@ const movePaddle = () => {
 };
 
 // Bricks
-let bricks, rows, cols, brickWidth, brickHeight, padding;
+let bricks, rows, cols, brickWidth, brickHeight, padding, activeBricksCount;
 let rowHeight, colWidth;
 
 const initBricks = () => {
@@ -87,6 +91,8 @@ const initBricks = () => {
 			};
 		}
 	}
+
+	activeBricksCount = rows * cols;
 };
 
 const drawBricks = () => {
@@ -119,6 +125,18 @@ const clear = () => {
 	ctx.clearRect(0, 0, width, height);
 };
 
+const gameResult = (message) => {
+	ctx.strokeStyle = "black";
+	ctx.lineWidth = "2";
+	ctx.strokeRect(width / 2 - 100, height / 2 - 50, 200, 100);
+
+	ctx.font = "24pt 'Segoe UI'";
+	ctx.fillStyle = "black";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText(message, width / 2, height / 2);
+};
+
 // Brick Collision Detection
 const detectBrickCollision = () => {
 	const row = Math.floor(ball.y / rowHeight);
@@ -129,6 +147,7 @@ const detectBrickCollision = () => {
 		if (brick.visible) {
 			ball.dy = -ball.dy;
 			brick.visible = false;
+			activeBricksCount--;
 		}
 	}
 };
@@ -141,6 +160,11 @@ const draw = () => {
 	movePaddle();
 
 	rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
+
+	if (activeBricksCount === 0) {
+		cancelAnimationFrame(animationId);
+		gameResult("You Win!");
+	}
 
 	// Draw bricks
 	drawBricks();
@@ -163,10 +187,11 @@ const draw = () => {
 				paddle.width;
 			ball.dy = -ball.dy;
 		} else {
-			cancelAnimationFrame(draw);
+			cancelAnimationFrame(animationId);
+			gameInProgress = false;
 			ball.x += ball.dx;
 			ball.y += ball.dy;
-			alert("Game Over");
+			gameResult("Game Over!");
 			return;
 		}
 	}
@@ -174,8 +199,62 @@ const draw = () => {
 	ball.x += ball.dx;
 	ball.y += ball.dy;
 
-	requestAnimationFrame(draw);
+	// requestAnimationFrame(draw);
 };
 
-initBricks();
-draw();
+const initBall = () => {
+	ball.x = width / 2;
+	ball.y = height / 2;
+	ball.dx = 0;
+	ball.dy = height * 0.01;
+};
+
+const initPaddle = () => {
+	paddle.x = (width - paddle.width) / 2;
+	paddle.y = height - paddle.height;
+};
+
+const init = () => {
+	initBall();
+	initPaddle();
+	initBricks();
+};
+
+const startScreen = () => {
+	init();
+	draw();
+};
+
+const animate = () => {
+	animationId = requestAnimationFrame(animate);
+	draw();
+};
+
+startScreen();
+
+let startBtn = document.getElementById("start-btn");
+let stopBtn = document.getElementById("stop-btn");
+
+
+const toggleButtons = () => {
+	if (gameInProgress) {
+		startBtn.style.display = "none";
+		stopBtn.style.display = "block";
+	} else {
+		startBtn.style.display = "block";
+		stopBtn.style.display = "none";
+	}
+};
+
+startBtn.addEventListener("click", () => {
+	animate();
+	gameInProgress = true;
+	toggleButtons();
+});
+
+stopBtn.addEventListener("click", () => {
+	cancelAnimationFrame(animationId);
+	gameInProgress = false;
+	toggleButtons();
+	startScreen();
+});
