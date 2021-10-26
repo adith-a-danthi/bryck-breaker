@@ -62,7 +62,13 @@ button {
     font-weight: 500;
 }
 
-button:hover {
+button:active {
     background-color: var(--color-primary);
     color: white;
+}
+
+#instructions {
+    font-size: 0.8em;
+    text-align: center;
+    margin-top: 1em;
 }
