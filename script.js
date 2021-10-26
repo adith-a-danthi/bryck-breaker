@@ -61,6 +61,7 @@ const movePaddle = () => {
 
 // Bricks
 let bricks, rows, cols, brickWidth, brickHeight, padding;
+let rowHeight, colWidth;
 
 const initBricks = () => {
 	rows = 3;
@@ -68,6 +69,9 @@ const initBricks = () => {
 	padding = 5;
 	brickWidth = width / cols - padding;
 	brickHeight = 20;
+
+	rowHeight = brickHeight + padding;
+	colWidth = brickWidth + padding;
 
 	bricks = [];
 	for (let i = 0; i < rows; i++) {
@@ -78,12 +82,11 @@ const initBricks = () => {
 				y: i * (brickHeight + padding) + padding,
 				width: brickWidth,
 				height: brickHeight,
-                visible: true,
-                color: "black",
+				visible: true,
+				color: "black",
 			};
 		}
 	}
-	console.log(bricks);
 };
 
 const drawBricks = () => {
@@ -116,6 +119,20 @@ const clear = () => {
 	ctx.clearRect(0, 0, width, height);
 };
 
+// Brick Collision Detection
+const detectBrickCollision = () => {
+	const row = Math.floor(ball.y / rowHeight);
+	const col = Math.floor(ball.x / colWidth);
+
+	if (row >= 0 && row < rows && col >= 0 && col < cols) {
+		const brick = bricks[row][col];
+		if (brick.visible) {
+			ball.dy = -ball.dy;
+			brick.visible = false;
+		}
+	}
+};
+
 const draw = () => {
 	clear();
 	circle(ball.x, ball.y, ball.radius, ball.color);
@@ -128,6 +145,8 @@ const draw = () => {
 	// Draw bricks
 	drawBricks();
 
+	detectBrickCollision();
+
 	if (
 		ball.x + ball.radius + ball.dx > width ||
 		ball.x + ball.dx - ball.radius < 0
@@ -135,11 +154,21 @@ const draw = () => {
 		ball.dx = -ball.dx;
 	}
 
-	if (
-		ball.y + ball.radius + ball.dy > height ||
-		ball.y + ball.dy - ball.radius < 0
-	) {
+	if (ball.y + ball.dy - ball.radius < 0) {
 		ball.dy = -ball.dy;
+	} else if (ball.y + ball.radius + ball.dy > height) {
+		if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+			ball.dx =
+				((ball.x - (paddle.x + paddle.width / 2)) * paddle.height) /
+				paddle.width;
+			ball.dy = -ball.dy;
+		} else {
+			cancelAnimationFrame(draw);
+			ball.x += ball.dx;
+			ball.y += ball.dy;
+			alert("Game Over");
+			return;
+		}
 	}
 
 	ball.x += ball.dx;
