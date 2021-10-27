@@ -1,35 +1,6 @@
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+const startBtn = document.getElementById("start-btn");
+const stopBtn = document.getElementById("stop-btn");
 
-let width = canvas.width;
-let height = canvas.height;
-
-let ball = {
-	x: width / 2,
-	y: height / 2,
-	radius: 10,
-	dx: 0, // horizontal speed of the ball
-	dy: height * 0.01, // vertical speed of the ball
-	color: "black",
-};
-
-let paddle = {
-	width: 125,
-	height: 20,
-	x: 0,
-	y: 0,
-	color: "black",
-	dx: 10, // speed of paddle
-};
-
-paddle.x = (width - paddle.width) / 2;
-paddle.y = height - paddle.height;
-
-let animationId;
-
-let gameInProgress = false;
-
-// Paddle Controls
 // Keyboard
 let leftPressed = false;
 let rightPressed = false;
@@ -47,62 +18,119 @@ const onKeyUp = (e) => {
 document.addEventListener("keydown", onKeyDown);
 document.addEventListener("keyup", onKeyUp);
 
-const movePaddle = () => {
-	const dx = paddle.dx;
-	if (leftPressed) {
-		paddle.x =
-			paddle.x - dx > 0 - paddle.width / 2
-				? paddle.x - dx
-				: 0 - paddle.width / 2;
-	}
-	if (rightPressed) {
-		paddle.x =
-			paddle.x + dx < width - paddle.width / 2
-				? paddle.x + dx
-				: width - paddle.width / 2;
-	}
+// Canvas
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+
+let width = canvas.width;
+let height = canvas.height;
+
+let ball = {
+	radius: 10,
+	color: "black",
+
+	init: () => {
+		ball.x = width / 2;
+		ball.y = height / 2;
+		ball.dx = 0;
+		ball.dy = height * 0.01;
+	},
+
+	move: () => {
+		ball.x += ball.dx;
+		ball.y += ball.dy;
+	},
+
+	draw: () => {
+		circle(ball.x, ball.y, ball.radius, ball.color);
+	},
+};
+
+let paddle = {
+	width: 125,
+	height: 20,
+	color: "black",
+	dx: 10, // speed of paddle
+
+	init: () => {
+		paddle.x = (width - paddle.width) / 2;
+		paddle.y = height - paddle.height;
+	},
+
+	move: () => {
+		const dx = paddle.dx;
+		if (leftPressed) {
+			paddle.x =
+				paddle.x - dx > 0 - paddle.width / 2
+					? paddle.x - dx
+					: 0 - paddle.width / 2;
+		}
+		if (rightPressed) {
+			paddle.x =
+				paddle.x + dx < width - paddle.width / 2
+					? paddle.x + dx
+					: width - paddle.width / 2;
+		}
+	},
+
+	draw: () => {
+		rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
+	},
 };
 
 // Bricks
-let bricks, rows, cols, brickWidth, brickHeight, padding, activeBricksCount;
-let rowHeight, colWidth;
+let bricksGrid = {
+	rows: 3,
+	cols: 5,
+	padding: 5,
+	height: 20,
 
-const initBricks = () => {
-	rows = 3;
-	cols = 5;
-	padding = 5;
-	brickWidth = width / cols - padding;
-	brickHeight = 20;
+	bricks: [],
 
-	rowHeight = brickHeight + padding;
-	colWidth = brickWidth + padding;
+	init: () => {
+		bricksGrid.width = width / bricksGrid.cols - bricksGrid.padding;
+		bricksGrid.rowHeight = bricksGrid.height + bricksGrid.padding;
+		bricksGrid.colWidth = bricksGrid.width + bricksGrid.padding;
 
-	bricks = [];
-	for (let i = 0; i < rows; i++) {
-		bricks[i] = [];
-		for (let j = 0; j < cols; j++) {
-			bricks[i][j] = {
-				x: j * (brickWidth + padding) + padding,
-				y: i * (brickHeight + padding) + padding,
-				width: brickWidth,
-				height: brickHeight,
-				visible: true,
-				color: "black",
-			};
+		for (let i = 0; i < bricksGrid.rows; i++) {
+			bricksGrid.bricks[i] = [];
+			for (let j = 0; j < bricksGrid.cols; j++) {
+				bricksGrid.bricks[i][j] = {
+					x: j * (bricksGrid.width + bricksGrid.padding) + bricksGrid.padding,
+					y: i * (bricksGrid.height + bricksGrid.padding) + bricksGrid.padding,
+					width: bricksGrid.width,
+					height: bricksGrid.height,
+					visible: true,
+					color: "black",
+				};
+			}
 		}
-	}
 
-	activeBricksCount = rows * cols;
+		bricksGrid.activeCount = bricksGrid.rows * bricksGrid.cols;
+	},
+
+	draw: () => {
+		bricksGrid.bricks.forEach((row) => {
+			row.forEach((brick) => {
+				if (brick.visible) {
+					rect(brick.x, brick.y, brick.width, brick.height, brick.color);
+				}
+			});
+		});
+	},
 };
 
-const drawBricks = () => {
-	bricks.forEach((row) => {
-		row.forEach((brick) => {
-			if (brick.visible) {
-				rect(brick.x, brick.y, brick.width, brick.height, brick.color);
-			}
-		});
-	});
+let animationId;
+let gameInProgress = false;
+
+const init = () => {
+	ball.init();
+	paddle.init();
+	bricksGrid.init();
+};
+
+const clear = () => {
+	ctx.clearRect(0, 0, width, height);
 };
 
 const circle = (x, y, radius, color) => {
@@ -121,11 +149,8 @@ const rect = (x, y, width, height, color) => {
 	ctx.fill();
 };
 
-const clear = () => {
-	ctx.clearRect(0, 0, width, height);
-};
-
 const gameResult = (message) => {
+	ctx.beginPath();
 	ctx.strokeStyle = "black";
 	ctx.lineWidth = "2";
 	ctx.strokeRect(width / 2 - 100, height / 2 - 50, 200, 100);
@@ -139,36 +164,32 @@ const gameResult = (message) => {
 
 // Brick Collision Detection
 const detectBrickCollision = () => {
-	const row = Math.floor(ball.y / rowHeight);
-	const col = Math.floor(ball.x / colWidth);
+	const row = Math.floor(ball.y / bricksGrid.rowHeight);
+	const col = Math.floor(ball.x / bricksGrid.colWidth);
 
-	if (row >= 0 && row < rows && col >= 0 && col < cols) {
-		const brick = bricks[row][col];
+	if (row >= 0 && row < bricksGrid.rows && col >= 0 && col < bricksGrid.cols) {
+		const brick = bricksGrid.bricks[row][col];
 		if (brick.visible) {
 			ball.dy = -ball.dy;
 			brick.visible = false;
-			activeBricksCount--;
+			bricksGrid.activeCount--;
 		}
 	}
 };
 
 const draw = () => {
 	clear();
-	circle(ball.x, ball.y, ball.radius, ball.color);
 
-	// Move paddle on key press
-	movePaddle();
+	ball.draw();
+	paddle.move();
+	paddle.draw();
 
-	rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
-
-	if (activeBricksCount === 0) {
+	if (bricksGrid.activeCount === 0) {
 		cancelAnimationFrame(animationId);
 		gameResult("You Win!");
 	}
 
-	// Draw bricks
-	drawBricks();
-
+	bricksGrid.draw();
 	detectBrickCollision();
 
 	if (
@@ -187,37 +208,24 @@ const draw = () => {
 				paddle.width;
 			ball.dy = -ball.dy;
 		} else {
-			cancelAnimationFrame(animationId);
-			gameInProgress = false;
-			ball.x += ball.dx;
-			ball.y += ball.dy;
+			ball.move();
 			gameResult("Game Over!");
+			cancelAnimationFrame(animationId);
 			return;
 		}
 	}
 
-	ball.x += ball.dx;
-	ball.y += ball.dy;
-
-	// requestAnimationFrame(draw);
+	ball.move();
 };
 
-const initBall = () => {
-	ball.x = width / 2;
-	ball.y = height / 2;
-	ball.dx = 0;
-	ball.dy = height * 0.01;
-};
-
-const initPaddle = () => {
-	paddle.x = (width - paddle.width) / 2;
-	paddle.y = height - paddle.height;
-};
-
-const init = () => {
-	initBall();
-	initPaddle();
-	initBricks();
+const toggleButtons = () => {
+	if (gameInProgress) {
+		startBtn.style.display = "none";
+		stopBtn.style.display = "block";
+	} else {
+		startBtn.style.display = "block";
+		stopBtn.style.display = "none";
+	}
 };
 
 const startScreen = () => {
@@ -230,26 +238,10 @@ const animate = () => {
 	draw();
 };
 
-startScreen();
-
-let startBtn = document.getElementById("start-btn");
-let stopBtn = document.getElementById("stop-btn");
-
-
-const toggleButtons = () => {
-	if (gameInProgress) {
-		startBtn.style.display = "none";
-		stopBtn.style.display = "block";
-	} else {
-		startBtn.style.display = "block";
-		stopBtn.style.display = "none";
-	}
-};
-
 startBtn.addEventListener("click", () => {
-	animate();
 	gameInProgress = true;
 	toggleButtons();
+	animate();
 });
 
 stopBtn.addEventListener("click", () => {
@@ -258,3 +250,5 @@ stopBtn.addEventListener("click", () => {
 	toggleButtons();
 	startScreen();
 });
+
+startScreen();
