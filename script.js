@@ -5,11 +5,19 @@ const stopBtn = document.getElementById("stop-btn");
 let leftPressed = false;
 let rightPressed = false;
 
+/**
+ * Check if left or right arrow key is pressed
+ * @param {Event} e Event object
+ */
 const onKeyDown = (e) => {
 	if (e.keyCode == 37) leftPressed = true;
 	else if (e.keyCode == 39) rightPressed = true;
 };
 
+/**
+ * Check if left or right arrow key is released
+ * @param {Event} e Event object
+ */
 const onKeyUp = (e) => {
 	if (e.keyCode == 37) leftPressed = false;
 	else if (e.keyCode == 39) rightPressed = false;
@@ -29,6 +37,9 @@ let ball = {
 	radius: 10,
 	color: "black",
 
+	/**
+	 * Initialize the ball object
+	 */
 	init: () => {
 		ball.x = width / 2;
 		ball.y = height / 2;
@@ -36,11 +47,17 @@ let ball = {
 		ball.dy = height * 0.01;
 	},
 
+	/**
+	 * Update the ball coordinates
+	 */
 	move: () => {
 		ball.x += ball.dx;
 		ball.y += ball.dy;
 	},
 
+	/**
+	 * Draw the ball on canvas
+	 */
 	draw: () => {
 		circle(ball.x, ball.y, ball.radius, ball.color);
 	},
@@ -52,11 +69,17 @@ let paddle = {
 	color: "black",
 	dx: 10, // speed of paddle
 
+	/**
+	 * Initilize the paddle position
+	 */
 	init: () => {
 		paddle.x = (width - paddle.width) / 2;
 		paddle.y = height - paddle.height;
 	},
 
+	/**
+	 * Update the paddle position
+	 */
 	move: () => {
 		const dx = paddle.dx;
 		if (leftPressed) {
@@ -73,6 +96,7 @@ let paddle = {
 		}
 	},
 
+	/** Draw the paddle */ 
 	draw: () => {
 		rect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
 	},
@@ -87,6 +111,9 @@ let bricksGrid = {
 
 	bricks: [],
 
+	/**
+	 * Initialize the bricks grid
+	 */
 	init: () => {
 		bricksGrid.width = width / bricksGrid.cols - bricksGrid.padding;
 		bricksGrid.rowHeight = bricksGrid.height + bricksGrid.padding;
@@ -109,6 +136,9 @@ let bricksGrid = {
 		bricksGrid.activeCount = bricksGrid.rows * bricksGrid.cols;
 	},
 
+	/**
+	 * Draw the bricks
+	 */
 	draw: () => {
 		bricksGrid.bricks.forEach((row) => {
 			row.forEach((brick) => {
@@ -123,16 +153,29 @@ let bricksGrid = {
 let animationId;
 let gameInProgress = false;
 
+/**
+ * Initialize the game
+ */
 const init = () => {
 	ball.init();
 	paddle.init();
 	bricksGrid.init();
 };
 
+/**
+ * Function to clear the canvas
+ */
 const clear = () => {
 	ctx.clearRect(0, 0, width, height);
 };
 
+/**
+ * Function to draw a circle on canvas
+ * @param {Number} x x-coordinate of the center of the circle
+ * @param {Number} y y-coordinate of the center of the circle
+ * @param {Number} radius radius of the circle
+ * @param {String} color color of the circle
+ */
 const circle = (x, y, radius, color) => {
 	ctx.beginPath();
 	ctx.arc(x, y, radius, 0, Math.PI * 2, false);
@@ -141,6 +184,14 @@ const circle = (x, y, radius, color) => {
 	ctx.fill();
 };
 
+/**
+ * Function to draw a rectangle on canvas
+ * @param {Number} x top left x-coordinate of the rectangle
+ * @param {Number} y top left y-coordinate of the rectangle
+ * @param {Number} width width of the rectangle
+ * @param {Number} height height of the rectangle
+ * @param {String} color color of the rectangle
+ */
 const rect = (x, y, width, height, color) => {
 	ctx.beginPath();
 	ctx.rect(x, y, width, height);
@@ -149,6 +200,10 @@ const rect = (x, y, width, height, color) => {
 	ctx.fill();
 };
 
+/**
+ * Function to display the game result
+ * @param {String} message game result message
+ */
 const gameResult = (message) => {
 	ctx.beginPath();
 	ctx.strokeStyle = "black";
@@ -162,7 +217,9 @@ const gameResult = (message) => {
 	ctx.fillText(message, width / 2, height / 2);
 };
 
-// Brick Collision Detection
+/**
+ * Brick collision detection
+ */
 const detectBrickCollision = () => {
 	const row = Math.floor(ball.y / bricksGrid.rowHeight);
 	const col = Math.floor(ball.x / bricksGrid.colWidth);
@@ -177,6 +234,9 @@ const detectBrickCollision = () => {
 	}
 };
 
+/**
+ * Draw each frame of the game
+ */
 const draw = () => {
 	clear();
 
@@ -192,6 +252,7 @@ const draw = () => {
 	bricksGrid.draw();
 	detectBrickCollision();
 
+	// Handle the ball collision with side walls
 	if (
 		ball.x + ball.radius + ball.dx > width ||
 		ball.x + ball.dx - ball.radius < 0
@@ -199,15 +260,18 @@ const draw = () => {
 		ball.dx = -ball.dx;
 	}
 
+	// Handle the ball collision with top wall
 	if (ball.y + ball.dy - ball.radius < 0) {
 		ball.dy = -ball.dy;
 	} else if (ball.y + ball.radius + ball.dy > height) {
+		// Handle the ball collision with paddle
 		if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
 			ball.dx =
 				((ball.x - (paddle.x + paddle.width / 2)) * paddle.height) /
 				paddle.width;
 			ball.dy = -ball.dy;
 		} else {
+			// Handle the ball collision with bottom wall
 			ball.move();
 			gameResult("Game Over!");
 			cancelAnimationFrame(animationId);
@@ -218,6 +282,10 @@ const draw = () => {
 	ball.move();
 };
 
+
+/**
+ * Toggle start/stop button
+ */
 const toggleButtons = () => {
 	if (gameInProgress) {
 		startBtn.style.display = "none";
@@ -228,11 +296,15 @@ const toggleButtons = () => {
 	}
 };
 
+/**
+ * Start the game
+ */
 const startScreen = () => {
 	init();
 	draw();
 };
 
+/** Start the animation */
 const animate = () => {
 	animationId = requestAnimationFrame(animate);
 	draw();
